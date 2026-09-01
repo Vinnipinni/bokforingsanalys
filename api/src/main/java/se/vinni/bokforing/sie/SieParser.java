@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SieParser {
 
@@ -28,7 +30,7 @@ public class SieParser {
         return null;
     }
 
-        public Map<String, String> parseKonton(InputStream in) throws IOException {
+    public Map<String, String> parseKonton(InputStream in) throws IOException {
         Map<String, String> konton = new HashMap<>();
         try (BufferedReader r = new BufferedReader(new InputStreamReader(in, PC8))) {
             String rad;
@@ -47,5 +49,28 @@ public class SieParser {
             }
         }
         return konton;
+    }
+
+    public static String[] delaUppFält(String rad) {
+        List<String> fält = new ArrayList<>();
+        StringBuilder aktuellt = new StringBuilder();
+        boolean iCitat = false;
+
+        for (char c : rad.toCharArray()) {
+            if (c == '"') {
+                iCitat = !iCitat;
+            } else if (c == ' ' && !iCitat) {
+                if (aktuellt.length() > 0) {
+                    fält.add(aktuellt.toString());
+                    aktuellt.setLength(0);
+                }
+            } else {
+                aktuellt.append(c);
+            }
+        }
+        if (aktuellt.length() > 0) {
+            fält.add(aktuellt.toString());
+        }
+        return fält.toArray(new String[0]);
     }
 }
