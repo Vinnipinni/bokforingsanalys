@@ -36,14 +36,9 @@ public class SieParser {
             String rad;
             while ((rad = r.readLine()) != null) {
                 if (rad.startsWith("#KONTO ")) {
-                    String[] delar = rad.split(" ", 3);
-                    if (delar.length == 3) {
-                        String nummer = delar[1];
-                        String namn = delar[2].trim();
-                        if (namn.startsWith("\"") && namn.endsWith("\"")) {
-                            namn = namn.substring(1, namn.length() - 1);
-                        }
-                        konton.put(nummer, namn);
+                    String[] fält = delaUppFält(rad);
+                    if (fält.length >= 3) {
+                        konton.put(fält[1], fält[2]);
                     }
                 }
             }
