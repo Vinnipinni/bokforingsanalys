@@ -10,6 +10,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class SieParserTest {
 
@@ -56,11 +57,28 @@ class SieParserTest {
             assertEquals(new BigDecimal("-2000.00"), v.transaktioner().get(1).belopp());
         }
     }
+
     @Test
     void behandlarDimensionsfältSomEttFält() {
         String[] fält = SieParser.delaUppFält("#TRANS 3041 {1 Nord 6 0001} -52625.00");
         assertArrayEquals(
                 new String[]{"#TRANS", "3041", "1 Nord 6 0001", "-52625.00"},
                 fält);
+    }
+
+    @Test
+    void allaVerifikatBalanserar() throws Exception {
+        try (InputStream in = getClass().getResourceAsStream("/sie4-exempel.se")) {
+            List<Verifikat> verifikat = new SieParser().parseVerifikat(in);
+            assertFalse(verifikat.isEmpty());
+
+            for (Verifikat v : verifikat) {
+                BigDecimal summa = v.transaktioner().stream()
+                        .map(Transaktion::belopp)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                assertEquals(0, summa.compareTo(BigDecimal.ZERO),
+                        "Verifikat " + v.serie() + v.nummer() + " balanserar inte: " + summa);
+            }
+        }
     }
 }
