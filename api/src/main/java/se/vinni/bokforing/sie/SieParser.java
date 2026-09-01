@@ -9,6 +9,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class SieParser {
 
@@ -50,11 +53,18 @@ public class SieParser {
         List<String> fält = new ArrayList<>();
         StringBuilder aktuellt = new StringBuilder();
         boolean iCitat = false;
+        boolean iMåsvinge = false;
 
         for (char c : rad.toCharArray()) {
             if (c == '"') {
                 iCitat = !iCitat;
-            } else if (c == ' ' && !iCitat) {
+            } else if (c == '{' && !iCitat) {
+                iMåsvinge = true;
+            } else if (c == '}' && !iCitat) {
+                iMåsvinge = false;
+                fält.add(aktuellt.toString());
+                aktuellt.setLength(0);
+            } else if (c == ' ' && !iCitat && !iMåsvinge) {
                 if (aktuellt.length() > 0) {
                     fält.add(aktuellt.toString());
                     aktuellt.setLength(0);
@@ -67,5 +77,44 @@ public class SieParser {
             fält.add(aktuellt.toString());
         }
         return fält.toArray(new String[0]);
+    }
+
+    public List<Verifikat> parseVerifikat(InputStream in) throws IOException {
+        List<Verifikat> verifikat = new ArrayList<>();
+
+        String serie = null;
+        String nummer = null;
+        LocalDate datum = null;
+        String text = null;
+        List<Transaktion> transaktioner = new ArrayList<>();
+        boolean iVerifikat = false;
+
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(in, PC8))) {
+            String rad;
+            while ((rad = r.readLine()) != null) {
+                rad = rad.trim();
+
+                if (rad.startsWith("#VER ")) {
+                    String[] fält = delaUppFält(rad);
+                    serie = fält[1];
+                    nummer = fält[2];
+                    datum = LocalDate.parse(fält[3], DateTimeFormatter.BASIC_ISO_DATE);
+                    text = fält.length > 4 ? fält[4] : "";
+                    transaktioner = new ArrayList<>();
+
+                } else if (rad.equals("{")) {
+                    iVerifikat = true;
+
+                } else if (rad.equals("}")) {
+                    iVerifikat = false;
+                    verifikat.add(new Verifikat(serie, nummer, datum, text, transaktioner));
+
+                } else if (iVerifikat && rad.startsWith("#TRANS ")) {
+                    String[] fält = delaUppFält(rad);
+                    transaktioner.add(new Transaktion(fält[1], new BigDecimal(fält[3])));
+                }
+            }
+        }
+        return verifikat;
     }
 }
