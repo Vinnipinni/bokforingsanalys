@@ -11,6 +11,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class SieParserTest {
 
@@ -79,6 +80,22 @@ class SieParserTest {
                 assertEquals(0, summa.compareTo(BigDecimal.ZERO),
                         "Verifikat " + v.serie() + v.nummer() + " balanserar inte: " + summa);
             }
+        }
+    }
+
+    @Test
+    void beräknarSaldoPerKonto() throws Exception {
+        try (InputStream in = getClass().getResourceAsStream("/sie4-exempel.se")) {
+            List<Verifikat> verifikat = new SieParser().parseVerifikat(in);
+            Map<String, BigDecimal> saldon = Saldoberäkning.perKonto(verifikat);
+
+            BigDecimal kassa = saldon.get("1910");
+            assertNotNull(kassa);
+
+            BigDecimal totalt = saldon.values().stream()
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            assertEquals(0, totalt.compareTo(BigDecimal.ZERO),
+                    "Summan av alla saldon ska vara noll: " + totalt);
         }
     }
 }
