@@ -11,5 +11,6 @@ public record ImportResultat(
         Map<String, String> konton,
         List<Verifikat> verifikat,
         Map<String, BigDecimal> resultatkonton,
-        Map<String, BigDecimal> balanskonton) {
+        Map<String, BigDecimal> balanskonton,
+        Map<String, BigDecimal> nyckeltal) {
 }
