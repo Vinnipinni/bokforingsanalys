@@ -117,4 +117,26 @@ class SieParserTest {
             assertEquals(saldon.size(), resultat.size() + balans.size());
         }
     }
+
+    @Test
+    void läserIngåendeBalanser() throws Exception {
+        try (InputStream in = getClass().getResourceAsStream("/sie4-exempel.se")) {
+            Map<String, BigDecimal> ib = new SieParser().parseIngåendeBalans(in);
+
+            assertEquals(new BigDecimal("1339.00"), ib.get("1910"));
+            assertEquals(new BigDecimal("-200000.00"), ib.get("2081"));
+        }
+    }
+
+    @Test
+    void saldoInkluderarIngåendeBalans() throws Exception {
+        Map<String, BigDecimal> ib = Map.of("1910", new BigDecimal("1000"));
+        List<Verifikat> verifikat = List.of(
+                new Verifikat("A", "1", LocalDate.of(2021, 1, 1), "Test",
+                        List.of(new Transaktion("1910", new BigDecimal("500")))));
+
+        Map<String, BigDecimal> saldon = Saldoberäkning.perKonto(verifikat, ib);
+
+        assertEquals(0, saldon.get("1910").compareTo(new BigDecimal("1500")));
+    }
 }

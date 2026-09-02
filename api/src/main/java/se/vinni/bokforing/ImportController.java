@@ -33,8 +33,9 @@ public class ImportController {
 
         var konton = parseMed(fil, in -> parser.parseKonton(in));
         var verifikat = parseMed(fil, in -> parser.parseVerifikat(in));
+        var ingåendeBalans = parseMed(fil, in -> parser.parseIngåendeBalans(in));
 
-        var saldon = Saldoberäkning.perKonto(verifikat);
+        var saldon = Saldoberäkning.perKonto(verifikat, ingåendeBalans);
         var resultatkonton = Saldoberäkning.resultatkonton(saldon);
         var balanskonton = Saldoberäkning.balanskonton(saldon);
 

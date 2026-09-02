@@ -4,14 +4,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SieParser {
 
@@ -47,6 +47,23 @@ public class SieParser {
             }
         }
         return konton;
+    }
+
+    public Map<String, BigDecimal> parseIngåendeBalans(InputStream in) throws IOException {
+        Map<String, BigDecimal> ib = new HashMap<>();
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(in, PC8))) {
+            String rad;
+            while ((rad = r.readLine()) != null) {
+                if (rad.startsWith("#IB ")) {
+                    String[] fält = delaUppFält(rad);
+                    // fält: #IB, årsindex, konto, belopp
+                    if (fält.length >= 4 && fält[1].equals("0")) {
+                        ib.put(fält[2], new BigDecimal(fält[3]));
+                    }
+                }
+            }
+        }
+        return ib;
     }
 
     public static String[] delaUppFält(String rad) {

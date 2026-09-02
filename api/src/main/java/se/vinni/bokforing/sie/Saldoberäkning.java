@@ -8,7 +8,14 @@ import java.util.Map;
 public class Saldoberäkning {
 
     public static Map<String, BigDecimal> perKonto(List<Verifikat> verifikat) {
-        Map<String, BigDecimal> saldon = new HashMap<>();
+        return perKonto(verifikat, Map.of());
+    }
+
+    public static Map<String, BigDecimal> perKonto(
+            List<Verifikat> verifikat,
+            Map<String, BigDecimal> ingåendeBalans) {
+
+        Map<String, BigDecimal> saldon = new HashMap<>(ingåendeBalans);
 
         for (Verifikat v : verifikat) {
             for (Transaktion t : v.transaktioner()) {
