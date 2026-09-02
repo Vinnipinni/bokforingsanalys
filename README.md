@@ -6,7 +6,7 @@ Webbapp som läser in svensk bokföring i SIE4-format och gör den analyserbar �
 
 ## Varför SIE
 
-SIE är den svenska de facto-standarden för att flytta redovisningsdata mellan system. Alla större bokföringsprogram — Fortnox, Visma, Bokio — exporterar det, och Skatteverket accepterar det. Det gör formatet till en bra ingång för verktyg som ska fungera oavsett vilket system företaget använder.
+SIE är den svenska de facto-standarden för att flytta redovisningsdata mellan system. Alla större bokföringsprogram - Fortnox, Visma, Bokio - exporterar det, och Skatteverket accepterar det. Det gör formatet till en bra ingång för verktyg som ska fungera oavsett vilket system företaget använder.
 
 Formatet är taggbaserat och teckenkodat i CP437 (`#FORMAT PC8`), med citerade och ociterade fält om vartannat och dimensioner i måsvingar. Parsern hanterar alla varianterna.
 
@@ -41,4 +41,4 @@ Testsviten validerar bland annat att varje inläst verifikat balanserar till nol
 
 ## Status
 
-Under utveckling. Parsning, REST-API och verifikatlista fungerar. Nästa steg: saldoberäkning och Python-analystjänsten.
+Under utveckling. Parsning, REST-API, saldoberäkning och resultat-/balansräkning fungerar. Nästa steg: Python-analystjänsten med nyckeltal.
