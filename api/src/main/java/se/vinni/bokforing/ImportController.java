@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import se.vinni.bokforing.sie.SieParser;
+import se.vinni.bokforing.sie.Saldoberäkning;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +29,14 @@ public class ImportController {
         var konton = parseMed(fil, in -> parser.parseKonton(in));
         var verifikat = parseMed(fil, in -> parser.parseVerifikat(in));
 
-        return ResponseEntity.ok(new ImportResultat(namn, konton, verifikat));
+        var saldon = Saldoberäkning.perKonto(verifikat);
+
+        return ResponseEntity.ok(new ImportResultat(
+                namn,
+                konton,
+                verifikat,
+                Saldoberäkning.resultatkonton(saldon),
+                Saldoberäkning.balanskonton(saldon)));
     }
 
     private <T> T parseMed(MultipartFile fil, ParserFunktion<T> f) throws IOException {
