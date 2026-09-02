@@ -17,6 +17,60 @@ type ImportResultat = {
   företagsnamn: string
   konton: Record<string, string>
   verifikat: Verifikat[]
+  resultatkonton: Record<string, number>
+  balanskonton: Record<string, number>
+}
+
+const kr = new Intl.NumberFormat('sv-SE', {
+  style: 'currency',
+  currency: 'SEK',
+  maximumFractionDigits: 0,
+})
+
+function Saldotabell({
+                       rubrik,
+                       saldon,
+                       konton,
+                     }: {
+  rubrik: string
+  saldon: Record<string, number>
+  konton: Record<string, string>
+}) {
+  const rader = Object.entries(saldon)
+      .filter(([, belopp]) => belopp !== 0)
+      .sort(([a], [b]) => a.localeCompare(b))
+
+  const summa = rader.reduce((s, [, belopp]) => s + belopp, 0)
+
+  return (
+      <section style={{ marginTop: '2rem' }}>
+        <h3>{rubrik}</h3>
+        <table>
+          <thead>
+          <tr>
+            <th>Konto</th>
+            <th>Benämning</th>
+            <th style={{ textAlign: 'right' }}>Saldo</th>
+          </tr>
+          </thead>
+          <tbody>
+          {rader.map(([konto, belopp]) => (
+              <tr key={konto}>
+                <td>{konto}</td>
+                <td>{konton[konto] ?? ''}</td>
+                <td style={{ textAlign: 'right' }}>{kr.format(belopp)}</td>
+              </tr>
+          ))}
+          <tr>
+            <td colSpan={2}><strong>Summa</strong></td>
+            <td style={{ textAlign: 'right' }}>
+              <strong>{kr.format(summa)}</strong>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </section>
+  )
 }
 
 function App() {
@@ -45,7 +99,7 @@ function App() {
   }
 
   return (
-      <main style={{ fontFamily: 'system-ui', padding: '2rem', maxWidth: 900 }}>
+      <main style={{ padding: '2rem', maxWidth: 900 }}>
         <h1>Bokföringsanalys</h1>
 
         <input
@@ -61,34 +115,25 @@ function App() {
         {fel && <p style={{ color: 'crimson' }}>{fel}</p>}
 
         {resultat && (
-            <section>
+            <>
               <h2>{resultat.företagsnamn}</h2>
               <p>
                 {Object.keys(resultat.konton).length} konton,{' '}
                 {resultat.verifikat.length} verifikat
               </p>
 
-              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                <thead>
-                <tr>
-                  <th style={{ textAlign: 'left' }}>Verifikat</th>
-                  <th style={{ textAlign: 'left' }}>Datum</th>
-                  <th style={{ textAlign: 'left' }}>Text</th>
-                  <th style={{ textAlign: 'right' }}>Rader</th>
-                </tr>
-                </thead>
-                <tbody>
-                {resultat.verifikat.map((v) => (
-                    <tr key={`${v.serie}${v.nummer}`}>
-                      <td>{v.serie}{v.nummer}</td>
-                      <td>{v.datum}</td>
-                      <td>{v.text}</td>
-                      <td style={{ textAlign: 'right' }}>{v.transaktioner.length}</td>
-                    </tr>
-                ))}
-                </tbody>
-              </table>
-            </section>
+              <Saldotabell
+                  rubrik="Resultaträkning"
+                  saldon={resultat.resultatkonton}
+                  konton={resultat.konton}
+              />
+
+              <Saldotabell
+                  rubrik="Balansräkning"
+                  saldon={resultat.balanskonton}
+                  konton={resultat.konton}
+              />
+            </>
         )}
       </main>
   )
