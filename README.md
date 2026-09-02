@@ -1,5 +1,6 @@
 # Bokföringsanalys
 
+[![Tester](https://github.com/Vinnipinni/bokforingsanalys/actions/workflows/tester.yml/badge.svg)](https://github.com/Vinnipinni/bokforingsanalys/actions/workflows/tester.yml)
 Webbapp som läser in svensk bokföring i SIE4-format och gör den analyserbar — kontoplan, verifikat och nyckeltal i ett gränssnitt istället för i ett bokföringsprogram.
 ![Gränssnitt](docs/skarmdump.png)
 
