@@ -1,142 +1,187 @@
 import { useState } from 'react'
 
 type Transaktion = {
-  konto: string
-  belopp: number
+    konto: string
+    belopp: number
 }
 
 type Verifikat = {
-  serie: string
-  nummer: string
-  datum: string
-  text: string
-  transaktioner: Transaktion[]
+    serie: string
+    nummer: string
+    datum: string
+    text: string
+    transaktioner: Transaktion[]
 }
 
 type ImportResultat = {
-  företagsnamn: string
-  konton: Record<string, string>
-  verifikat: Verifikat[]
-  resultatkonton: Record<string, number>
-  balanskonton: Record<string, number>
+    företagsnamn: string
+    konton: Record<string, string>
+    verifikat: Verifikat[]
+    resultatkonton: Record<string, number>
+    balanskonton: Record<string, number>
+    nyckeltal: Record<string, number>
 }
 
 const kr = new Intl.NumberFormat('sv-SE', {
-  style: 'currency',
-  currency: 'SEK',
-  maximumFractionDigits: 0,
+    style: 'currency',
+    currency: 'SEK',
+    maximumFractionDigits: 0,
 })
 
+const procent = new Intl.NumberFormat('sv-SE', {
+    style: 'percent',
+    maximumFractionDigits: 1,
+})
+
+const etiketter: Record<string, string> = {
+    nettoomsattning: 'Nettoomsättning',
+    rorelsekostnader: 'Rörelsekostnader',
+    rorelseresultat: 'Rörelseresultat',
+    tillgangar: 'Balansomslutning',
+    eget_kapital: 'Eget kapital',
+    rorelsemarginal: 'Rörelsemarginal',
+    soliditet: 'Soliditet',
+}
+
+function Nyckeltal({ tal }: { tal: Record<string, number> }) {
+    if (Object.keys(tal).length === 0) {
+        return <p>Nyckeltal är inte tillgängliga just nu.</p>
+    }
+
+    const ärProcent = (nyckel: string) =>
+        nyckel === 'rorelsemarginal' || nyckel === 'soliditet'
+
+    return (
+        <section style={{ marginTop: '2rem' }}>
+            <h3>Nyckeltal</h3>
+            <table>
+                <tbody>
+                {Object.entries(tal).map(([nyckel, värde]) => (
+                    <tr key={nyckel}>
+                        <td>{etiketter[nyckel] ?? nyckel}</td>
+                        <td style={{ textAlign: 'right' }}>
+                            {ärProcent(nyckel) ? procent.format(värde) : kr.format(värde)}
+                        </td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+        </section>
+    )
+}
+
 function Saldotabell({
-                       rubrik,
-                       saldon,
-                       konton,
+                         rubrik,
+                         saldon,
+                         konton,
                      }: {
-  rubrik: string
-  saldon: Record<string, number>
-  konton: Record<string, string>
+    rubrik: string
+    saldon: Record<string, number>
+    konton: Record<string, string>
 }) {
-  const rader = Object.entries(saldon)
-      .filter(([, belopp]) => belopp !== 0)
-      .sort(([a], [b]) => a.localeCompare(b))
+    const rader = Object.entries(saldon)
+        .filter(([, belopp]) => belopp !== 0)
+        .sort(([a], [b]) => a.localeCompare(b))
 
-  const summa = rader.reduce((s, [, belopp]) => s + belopp, 0)
+    const summa = rader.reduce((s, [, belopp]) => s + belopp, 0)
 
-  return (
-      <section style={{ marginTop: '2rem' }}>
-        <h3>{rubrik}</h3>
-        <table>
-          <thead>
-          <tr>
-            <th>Konto</th>
-            <th>Benämning</th>
-            <th style={{ textAlign: 'right' }}>Saldo</th>
-          </tr>
-          </thead>
-          <tbody>
-          {rader.map(([konto, belopp]) => (
-              <tr key={konto}>
-                <td>{konto}</td>
-                <td>{konton[konto] ?? ''}</td>
-                <td style={{ textAlign: 'right' }}>{kr.format(belopp)}</td>
-              </tr>
-          ))}
-          <tr>
-            <td colSpan={2}><strong>Summa</strong></td>
-            <td style={{ textAlign: 'right' }}>
-              <strong>{kr.format(summa)}</strong>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </section>
-  )
+    return (
+        <section style={{ marginTop: '2rem' }}>
+            <h3>{rubrik}</h3>
+            <table>
+                <thead>
+                <tr>
+                    <th>Konto</th>
+                    <th>Benämning</th>
+                    <th style={{ textAlign: 'right' }}>Saldo</th>
+                </tr>
+                </thead>
+                <tbody>
+                {rader.map(([konto, belopp]) => (
+                    <tr key={konto}>
+                        <td>{konto}</td>
+                        <td>{konton[konto] ?? ''}</td>
+                        <td style={{ textAlign: 'right' }}>{kr.format(belopp)}</td>
+                    </tr>
+                ))}
+                <tr>
+                    <td colSpan={2}><strong>Summa</strong></td>
+                    <td style={{ textAlign: 'right' }}>
+                        <strong>{kr.format(summa)}</strong>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    )
 }
 
 function App() {
-  const [resultat, setResultat] = useState<ImportResultat | null>(null)
-  const [laddar, setLaddar] = useState(false)
-  const [fel, setFel] = useState<string | null>(null)
+    const [resultat, setResultat] = useState<ImportResultat | null>(null)
+    const [laddar, setLaddar] = useState(false)
+    const [fel, setFel] = useState<string | null>(null)
 
-  async function laddaUpp(fil: File) {
-    setLaddar(true)
-    setFel(null)
+    async function laddaUpp(fil: File) {
+        setLaddar(true)
+        setFel(null)
 
-    const data = new FormData()
-    data.append('fil', fil)
+        const data = new FormData()
+        data.append('fil', fil)
 
-    try {
-      const svar = await fetch('/api/import', { method: 'POST', body: data })
-      if (!svar.ok) {
-        throw new Error(`Servern svarade ${svar.status}`)
-      }
-      setResultat(await svar.json())
-    } catch (e) {
-      setFel(e instanceof Error ? e.message : 'Något gick fel')
-    } finally {
-      setLaddar(false)
+        try {
+            const svar = await fetch('/api/import', { method: 'POST', body: data })
+            if (!svar.ok) {
+                throw new Error(`Servern svarade ${svar.status}`)
+            }
+            setResultat(await svar.json())
+        } catch (e) {
+            setFel(e instanceof Error ? e.message : 'Något gick fel')
+        } finally {
+            setLaddar(false)
+        }
     }
-  }
 
-  return (
-      <main style={{ padding: '2rem', maxWidth: 900 }}>
-        <h1>Bokföringsanalys</h1>
+    return (
+        <main style={{ padding: '2rem', maxWidth: 900 }}>
+            <h1>Bokföringsanalys</h1>
 
-        <input
-            type="file"
-            accept=".se,.si"
-            onChange={(e) => {
-              const fil = e.target.files?.[0]
-              if (fil) laddaUpp(fil)
-            }}
-        />
+            <input
+                type="file"
+                accept=".se,.si"
+                onChange={(e) => {
+                    const fil = e.target.files?.[0]
+                    if (fil) laddaUpp(fil)
+                }}
+            />
 
-        {laddar && <p>Läser filen…</p>}
-        {fel && <p style={{ color: 'crimson' }}>{fel}</p>}
+            {laddar && <p>Läser filen…</p>}
+            {fel && <p style={{ color: 'crimson' }}>{fel}</p>}
 
-        {resultat && (
-            <>
-              <h2>{resultat.företagsnamn}</h2>
-              <p>
-                {Object.keys(resultat.konton).length} konton,{' '}
-                {resultat.verifikat.length} verifikat
-              </p>
+            {resultat && (
+                <>
+                    <h2>{resultat.företagsnamn}</h2>
+                    <p>
+                        {Object.keys(resultat.konton).length} konton,{' '}
+                        {resultat.verifikat.length} verifikat
+                    </p>
 
-              <Saldotabell
-                  rubrik="Resultaträkning"
-                  saldon={resultat.resultatkonton}
-                  konton={resultat.konton}
-              />
+                    <Nyckeltal tal={resultat.nyckeltal} />
 
-              <Saldotabell
-                  rubrik="Balansräkning"
-                  saldon={resultat.balanskonton}
-                  konton={resultat.konton}
-              />
-            </>
-        )}
-      </main>
-  )
+                    <Saldotabell
+                        rubrik="Resultaträkning"
+                        saldon={resultat.resultatkonton}
+                        konton={resultat.konton}
+                    />
+
+                    <Saldotabell
+                        rubrik="Balansräkning"
+                        saldon={resultat.balanskonton}
+                        konton={resultat.konton}
+                    />
+                </>
+            )}
+        </main>
+    )
 }
 
 export default App
