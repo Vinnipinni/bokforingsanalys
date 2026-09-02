@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SieParserTest {
 
@@ -96,6 +97,24 @@ class SieParserTest {
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             assertEquals(0, totalt.compareTo(BigDecimal.ZERO),
                     "Summan av alla saldon ska vara noll: " + totalt);
+        }
+    }
+
+    @Test
+    void delarUppIResultatOchBalans() throws Exception {
+        try (InputStream in = getClass().getResourceAsStream("/sie4-exempel.se")) {
+            List<Verifikat> verifikat = new SieParser().parseVerifikat(in);
+            Map<String, BigDecimal> saldon = Saldoberäkning.perKonto(verifikat);
+
+            Map<String, BigDecimal> resultat = Saldoberäkning.resultatkonton(saldon);
+            Map<String, BigDecimal> balans = Saldoberäkning.balanskonton(saldon);
+
+            assertTrue(resultat.containsKey("3041"));
+            assertFalse(resultat.containsKey("1910"));
+            assertTrue(balans.containsKey("1910"));
+            assertFalse(balans.containsKey("3041"));
+
+            assertEquals(saldon.size(), resultat.size() + balans.size());
         }
     }
 }

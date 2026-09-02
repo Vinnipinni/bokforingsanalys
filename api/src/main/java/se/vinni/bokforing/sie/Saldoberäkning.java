@@ -17,4 +17,27 @@ public class Saldoberäkning {
         }
         return saldon;
     }
+
+    public static Map<String, BigDecimal> resultatkonton(Map<String, BigDecimal> saldon) {
+        return filtrera(saldon, '3', '4', '5', '6', '7', '8');
+    }
+
+    public static Map<String, BigDecimal> balanskonton(Map<String, BigDecimal> saldon) {
+        return filtrera(saldon, '1', '2');
+    }
+
+    private static Map<String, BigDecimal> filtrera(Map<String, BigDecimal> saldon, char... klasser) {
+        Map<String, BigDecimal> resultat = new HashMap<>();
+
+        for (Map.Entry<String, BigDecimal> post : saldon.entrySet()) {
+            char första = post.getKey().charAt(0);
+            for (char klass : klasser) {
+                if (första == klass) {
+                    resultat.put(post.getKey(), post.getValue());
+                    break;
+                }
+            }
+        }
+        return resultat;
+    }
 }
